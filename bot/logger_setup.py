@@ -1,28 +1,36 @@
+"""Logging yapılandırması."""
+
 import logging
 import os
-from bot.config import LOG_FILE
+
+LOG_FILE = "logs/trade_bot.log"
+LOG_LEVEL = logging.INFO
 
 
-def setup_logger():
-    """Bot için logging yapılandırması."""
-    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+def setup_logger(log_file: str = LOG_FILE, level: int = LOG_LEVEL) -> logging.Logger:
+    """
+    Root logger'ı dosyaya + konsola bağlar.
+    Tekrar çağrıda handler çakışmasını önler.
+    """
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
-    logger = logging.getLogger("trade_bot")
-    logger.setLevel(logging.INFO)
+    root = logging.getLogger()
+    if root.handlers:
+        return root   # Zaten kurulmuş
 
-    formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)-8s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+    root.setLevel(level)
+
+    fmt = logging.Formatter(
+        "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    # Dosyaya yaz
-    file_handler = logging.FileHandler(LOG_FILE)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+    fh = logging.FileHandler(log_file, encoding="utf-8")
+    fh.setFormatter(fmt)
+    root.addHandler(fh)
 
-    # Konsola yaz
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
+    ch = logging.StreamHandler()
+    ch.setFormatter(fmt)
+    root.addHandler(ch)
 
-    return logger
+    return root
